@@ -15,4 +15,7 @@
 ![output_ae](results/images/autoencoder.gif)
 
 ### mnist_generative_model.py
-![output_gm](results/images/generative_model_integers.png)
+* Transfer: Arbitrary inputs
+	* ![output_gm_0](results/images/generative_model_integers_1.png)
+* Retrain: Use inputs matching training data digits
+	* ![output_gm_1](results/images/generative_model_integers_0.png)

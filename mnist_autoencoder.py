@@ -98,6 +98,10 @@ def main(argv):
     ax[0].set_title('Original')
     ax[1].set_title('Reconstructed')
 
+    for axes in ax:
+        axes.get_xaxis().set_visible(False)
+        axes.get_yaxis().set_visible(False)
+
     def init():
         img[0].set_data(np.zeros((28, 28)))
         img[1].set_data(np.zeros((28, 28)))

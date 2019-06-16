@@ -35,7 +35,8 @@ def main(argv):
 
     layers = [l for l in model.layers]
     for id_, layer in enumerate(layers[4:]):
-        layer.trainable = False
+        if skip:
+            layer.trainable = False
         model_trunc.add(layer)
 
     model_trunc.summary()
