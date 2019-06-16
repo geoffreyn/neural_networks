@@ -50,7 +50,7 @@ def get_model(skip=True):
         try:
             print('Model exists, loading...')
             model.load_weights('model/autoencoder.hdf')
-        except ValueError:
+        except (OSError, ValueError):
             print(Warning("Model does not match, retraining..."))
             skip=False
     else:
