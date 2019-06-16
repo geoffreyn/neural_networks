@@ -1,20 +1,18 @@
 #!/usr/local/bin python3
 
 import os
-
 #os.environ["KERAS_BACKEND"] = "plaidml.keras.backend"
 os.environ["KERAS_BACKEND"] = "tensorflow"
 
 import keras
-from keras import backend as K
-from keras.callbacks import EarlyStopping
-early_stopping_monitor = EarlyStopping(patience=5)
-from keras.datasets import mnist
-from keras.layers import Dense, Flatten, Dropout
-from keras.layers import Conv2D, MaxPooling2D
-from keras.models import Sequential
 import matplotlib.pylab as plt
+from keras.callbacks import EarlyStopping
+from keras.datasets import mnist
+from keras.layers import Conv2D, Dense, Flatten, MaxPooling2D
+from keras.models import Sequential
 
+
+early_stopping_monitor = EarlyStopping(patience=5)
 
 class AccuracyHistory(keras.callbacks.Callback):
     def on_train_begin(self, logs={}):
@@ -72,24 +70,25 @@ model.compile(loss=keras.losses.categorical_crossentropy,
 
 
 if os.path.exists('model/cnn.hdf'):
-	model.load_weights('model/cnn.hdf')
+    print('Model exists, loading...')
+    model.load_weights('model/cnn.hdf')
 else:
-	history = AccuracyHistory()
+    history = AccuracyHistory()
 
-	model.fit(x_train, y_train,
-	          batch_size=batch_size,
-	          epochs=epochs,
-	          verbose=1,
-	          validation_data=(x_test, y_test),
-	          callbacks=[history, early_stopping_monitor])
+    model.fit(x_train, y_train,
+              batch_size=batch_size,
+              epochs=epochs,
+              verbose=1,
+              validation_data=(x_test, y_test),
+              callbacks=[history, early_stopping_monitor])
 
-	os.makedirs('model', exist_ok=True)
-	model.save_weights('model/cnn.hdf')
+    os.makedirs('model', exist_ok=True)
+    model.save_weights('model/cnn.hdf')
 
-	plt.plot(history.acc)
-	plt.xlabel('Epochs')
-	plt.ylabel('Accuracy')
-	plt.show()
+    plt.plot(history.acc)
+    plt.xlabel('Epochs')
+    plt.ylabel('Accuracy')
+    plt.show()
 
 score = model.evaluate(x_test, y_test, verbose=0)
 
