@@ -14,7 +14,7 @@ import numpy as np
 from mnist_cnn import (x_train, x_test, y_train, y_test, input_shape,
                        batch_size, epochs, AccuracyHistory)
 
-early_stopping_monitor = EarlyStopping(patience=5)
+early_stopping_monitor = EarlyStopping(patience=2)
 
 # os.environ["KERAS_BACKEND"] = "plaidml.keras.backend"
 os.environ["KERAS_BACKEND"] = "tensorflow"
@@ -29,8 +29,10 @@ flaty_test = np.squeeze(flatx_test)
 model = Sequential()
 model.add(Flatten(input_shape=input_shape))
 model.add(Dense(1000, activation='relu'))
+model.add(Dropout(rate=0.5))
 model.add(Dense(10, activation='relu'))
 model.add(Dense(1000, activation='relu', input_shape=(-1, 10, 1, 1)))
+model.add(Dropout(rate=0.5))
 model.add(Dense(x_train.shape[1] * x_train.shape[2], activation='relu'))
 
 model.compile(loss=keras.losses.mean_squared_error,
