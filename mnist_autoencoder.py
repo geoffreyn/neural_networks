@@ -102,7 +102,7 @@ def main(argv):
         img[0].set_data(np.squeeze(x_test[num:num+1,:,:,:]))
 
         img[1].set_data(np.reshape(model.predict(x_test[num:num+1,:,:,:]),
-                                (x_test.shape[1], x_test.shape[2])))
+                                   (x_test.shape[1], x_test.shape[2])))
 
         return (img,)
 
