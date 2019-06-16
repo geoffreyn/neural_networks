@@ -16,12 +16,12 @@ import numpy as np
 from mnist_cnn import (x_train, x_test, y_train, y_test, input_shape,
                        batch_size, epochs, AccuracyHistory)
 from mnist_autoencoder import (flatx_train, flaty_train,
-	                           flatx_test, flaty_test, get_model)
+                               flatx_test, flaty_test, get_model)
 
 
 model = get_model(skip=True)
 
-# Load the full model from the mnist_autoencoder and use the nx10 dense layer as an input layer
+# Load the full model from the mnist_autoencoder and use the (n x 10) dense layer as an input layer
 model_trunc = Sequential()
 
 model_trunc.add(Flatten(input_shape=(10,1,1)))
@@ -37,18 +37,21 @@ model_trunc.compile(loss=keras.losses.mean_squared_error,
               optimizer=keras.optimizers.Adam(),
               metrics=['accuracy'])
 
-y_train_extend = np.reshape(y_train, (60000, 10, 1, 1))
-y_test_extend = np.reshape(y_test, (10000, 10, 1, 1))
-
 plt.set_cmap('gray')
 
 rows, cols = (4, 3)
-fig, ax = plt.subplots(rows, cols)
+fig = plt.figure(figsize=(12, 12))
 
-for num in range(10):
-    z = [0]*10
-    z[num] = 1
-    ax[num // cols][num % cols].imshow(np.reshape(model_trunc.predict(np.reshape(z, (1, 10, 1, 1))), (28, 28)))
-    ax[num // cols][num % cols].set_title('#{}'.format(num))
+for num in range(rows*cols):
+    ax = fig.add_subplot(rows, cols, num+1)
+
+    z = np.random.rand(10)
+
+    ax.imshow(np.reshape(model_trunc.predict(np.reshape(z, (1, 10, 1, 1))), (28, 28)))
+
+    ax.set_title('#{}'.format(num))
+
+    ax.get_xaxis().set_visible(False)
+    ax.get_yaxis().set_visible(False)
 
 fig.savefig('results/images/generative_model_integers.png')
