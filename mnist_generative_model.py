@@ -18,7 +18,7 @@ from mnist_cnn import (x_train, x_test, y_train, y_test, input_shape,
 from mnist_autoencoder import (flatx_train, flaty_train,
                                flatx_test, flaty_test, get_model)
 
-early_stopping_monitor = EarlyStopping(patience=10)
+early_stopping_monitor = EarlyStopping(patience=3)
 
 def main(argv):
     if len(argv) > 0:
@@ -70,6 +70,8 @@ def main(argv):
         else:
             z = np.random.rand(10)
 
+        z = z / np.sum(z)
+
         ax.imshow(np.reshape(model_trunc.predict(np.reshape(z,
                                                             (1, 10, 1, 1))),
                                                             (28, 28)))
@@ -84,6 +86,51 @@ def main(argv):
                 break
     
     fig.savefig('results/images/generative_model_integers_{}.png'.format(skip))
+
+    # Generate number transition image
+    plt.set_cmap('gray')
+
+    fig, ax = plt.subplots()
+
+    img = ax.imshow(np.zeros((28, 28)), vmin=0, vmax=1)
+
+    num1 = np.random.randint(10)
+    num2 = num1
+    while (num2 == num1):
+        num2 = np.random.randint(10)
+
+    ttl = ax.text(.4, 1.05, '{} -> {}: {}%'.format(num1, num2, 0), transform = ax.transAxes, va='center')
+
+    ax.get_xaxis().set_visible(False)
+    ax.get_yaxis().set_visible(False)
+
+    def init():
+        ttl.set_text('')
+        img.set_data(np.zeros((28, 28)))
+
+        return (img,)
+
+    def animate(factor):
+        ttl.set_text('{} -> {}: {}%'.format(num2, num1, factor / 100))
+
+        z = [0]*10
+        z[num1] = factor / 100
+        z[num2] = 1 - factor / 100
+
+        result = np.reshape(model_trunc.predict(np.reshape(z,
+                                                            (1, 10, 1, 1))),
+                                                            (28, 28))
+        img.set_data(result)
+
+        return (img,)
+
+    # call the animator. blit=True means only re-draw the parts that have
+    # changed.
+    anim = animation.FuncAnimation(fig, animate, init_func=init,
+                                   frames=100, interval=50, blit=False)
+
+    anim.save('results/images/generative_transformation.mp4')
+    anim.save('results/images/generative_transformation.gif', writer='imagemagick', fps=2)
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv[1:]))
