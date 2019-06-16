@@ -29,10 +29,7 @@ flatx_test = np.reshape(x_test,
 flaty_test = np.squeeze(flatx_test)
 
 
-def main(argv):
-
-    if len(argv) > 0:
-        skip = int(argv[0])
+def get_model(skip=True):
 
     model = Sequential()
     model.add(Flatten(input_shape=input_shape))
@@ -46,8 +43,6 @@ def main(argv):
     model.compile(loss=keras.losses.mean_squared_error,
                   optimizer=keras.optimizers.Adam(),
                   metrics=['accuracy'])
-
-    model.summary()
 
     if os.path.exists('model/autoencoder.hdf'):
         print('Model exists, loading...')
@@ -70,6 +65,20 @@ def main(argv):
         plt.ylabel('Accuracy')
         plt.show()
         model.save_weights('model/autoencoder.hdf')
+
+    return model
+
+
+def main(argv):
+
+    if len(argv) > 0:
+        skip = int(argv[0])
+    else:
+        skip = False
+
+    model = get_model(skip)
+
+    model.summary()
 
     os.makedirs('results/images/', exist_ok=True)
 
@@ -104,7 +113,6 @@ def main(argv):
 
     anim.save('results/images/autoencoder.mp4')
     anim.save('results/images/autoencoder.gif', writer='imagemagick', fps=2)
-
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv[1:]))
