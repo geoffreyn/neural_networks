@@ -38,15 +38,21 @@ def get_model(skip=True):
     model.add(Dense(10, activation='relu'))
     model.add(Dense(1000, activation='relu', input_shape=(-1, 10, 1, 1)))
     model.add(Dropout(rate=0.5))
+    model.add(Dense(1000, activation='relu'))
+    model.add(Dropout(rate=0.5))
     model.add(Dense(x_train.shape[1] * x_train.shape[2], activation='relu'))
 
     model.compile(loss=keras.losses.mean_squared_error,
                   optimizer=keras.optimizers.Adam(),
                   metrics=['accuracy'])
 
-    if os.path.exists('model/autoencoder.hdf'):
-        print('Model exists, loading...')
-        model.load_weights('model/autoencoder.hdf')
+    if (os.path.exists('model/autoencoder.hdf')) and (skip):
+        try:
+            print('Model exists, loading...')
+            model.load_weights('model/autoencoder.hdf')
+        except ValueError:
+            print(Warning("Model does not match, retraining..."))
+            skip=False
     else:
         skip=False
 
