@@ -90,19 +90,20 @@ def main(argv):
         return (img,)
 
     def animate(num):
-        img[0].set_data(np.squeeze(x_train[num:num+1,:,:,:]))
+        img[0].set_data(np.squeeze(x_test[num:num+1,:,:,:]))
 
-        img[1].set_data(np.reshape(model.predict(x_train[num:num+1,:,:,:]),
-                                (x_train.shape[1], x_train.shape[2])))
+        img[1].set_data(np.reshape(model.predict(x_test[num:num+1,:,:,:]),
+                                (x_test.shape[1], x_test.shape[2])))
 
         return (img,)
 
     # call the animator. blit=True means only re-draw the parts that have
     # changed.
     anim = animation.FuncAnimation(fig, animate, init_func=init,
-                                   frames=100, interval=200, blit=False)
+                                   frames=75, interval=200, blit=False)
 
     anim.save('results/images/autoencoder.mp4')
+    anim.save('results/images/autoencoder.gif', writer='imagemagick', fps=2)
 
 
 if __name__ == '__main__':
