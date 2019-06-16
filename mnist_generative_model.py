@@ -18,40 +18,71 @@ from mnist_cnn import (x_train, x_test, y_train, y_test, input_shape,
 from mnist_autoencoder import (flatx_train, flaty_train,
                                flatx_test, flaty_test, get_model)
 
+early_stopping_monitor = EarlyStopping(patience=10)
 
-model = get_model(skip=True)
+def main(argv):
+    if len(argv) > 0:
+        skip = int(argv[0])
+    else:
+        skip = 1
 
-# Load the full model from the mnist_autoencoder and use the (n x 10) dense layer as an input layer
-model_trunc = Sequential()
+    model = get_model(skip=True)
 
-model_trunc.add(Flatten(input_shape=(10,1,1)))
+    # Load the full model from the mnist_autoencoder and use the (n x 10) dense layer as an input layer
+    model_trunc = Sequential()
 
-layers = [l for l in model.layers]
-for id_, layer in enumerate(layers[4:]):
-    layer.trainable = False
-    model_trunc.add(layer)
+    model_trunc.add(Flatten(input_shape=(10,1,1)))
 
-model_trunc.summary()
+    layers = [l for l in model.layers]
+    for id_, layer in enumerate(layers[4:]):
+        layer.trainable = False
+        model_trunc.add(layer)
 
-model_trunc.compile(loss=keras.losses.mean_squared_error,
-              optimizer=keras.optimizers.Adam(),
-              metrics=['accuracy'])
+    model_trunc.summary()
 
-plt.set_cmap('gray')
+    model_trunc.compile(loss=keras.losses.mean_squared_logarithmic_error,
+                  optimizer=keras.optimizers.Adam(),
+                  metrics=['accuracy'])
 
-rows, cols = (4, 3)
-fig = plt.figure(figsize=(12, 12))
+    if not skip:
+        y_train_extend = np.reshape(y_train, (60000, 10, 1, 1))
+        y_test_extend = np.reshape(y_test, (10000, 10, 1, 1))
 
-for num in range(rows*cols):
-    ax = fig.add_subplot(rows, cols, num+1)
+        model_trunc.fit(y_train_extend, flatx_train[:,:,0,0],
+                        batch_size=batch_size,
+                        epochs=epochs,
+                        verbose=1,
+                        validation_data=(y_test_extend, flatx_test[:,:,0,0]),
+                        callbacks=[early_stopping_monitor])
 
-    z = np.random.rand(10)
+    plt.set_cmap('gray')
 
-    ax.imshow(np.reshape(model_trunc.predict(np.reshape(z, (1, 10, 1, 1))), (28, 28)))
+    rows, cols = (4, 3)
+    fig = plt.figure(figsize=(12, 12))
 
-    ax.set_title('#{}'.format(num))
+    for num in range(rows*cols):
+        ax = fig.add_subplot(rows, cols, num+1)
 
-    ax.get_xaxis().set_visible(False)
-    ax.get_yaxis().set_visible(False)
+        if not skip:
+            z = [0]*10
+            z[num] = 1
+        else:
+            z = np.random.rand(10)
 
-fig.savefig('results/images/generative_model_integers.png')
+        ax.imshow(np.reshape(model_trunc.predict(np.reshape(z,
+                                                            (1, 10, 1, 1))),
+                                                            (28, 28)))
+
+        ax.set_title('#{}'.format(num))
+
+        ax.get_xaxis().set_visible(False)
+        ax.get_yaxis().set_visible(False)
+
+        if not skip:
+            if num >= 9:
+                break
+    
+    fig.savefig('results/images/generative_model_integers_{}.png'.format(skip))
+
+if __name__ == '__main__':
+    sys.exit(main(sys.argv[1:]))
