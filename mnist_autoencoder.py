@@ -1,5 +1,6 @@
 #!/usr/local/bin python3
 import os
+import sys
 
 import keras
 from keras import backend as K
@@ -26,26 +27,29 @@ flatx_test = np.reshape(x_test,
                         (-1, x_train.shape[1] * x_train.shape[2], 1, 1))
 flaty_test = np.squeeze(flatx_test)
 
-model = Sequential()
-model.add(Flatten(input_shape=input_shape))
-model.add(Dense(1000, activation='relu'))
-model.add(Dropout(rate=0.5))
-model.add(Dense(10, activation='relu'))
-model.add(Dense(1000, activation='relu', input_shape=(-1, 10, 1, 1)))
-model.add(Dropout(rate=0.5))
-model.add(Dense(x_train.shape[1] * x_train.shape[2], activation='relu'))
 
-model.compile(loss=keras.losses.mean_squared_error,
-              optimizer=keras.optimizers.Adam(),
-              metrics=['accuracy'])
+def main():
+    model = Sequential()
+    model.add(Flatten(input_shape=input_shape))
+    model.add(Dense(1000, activation='relu'))
+    model.add(Dropout(rate=0.5))
+    model.add(Dense(10, activation='relu'))
+    model.add(Dense(1000, activation='relu', input_shape=(-1, 10, 1, 1)))
+    model.add(Dropout(rate=0.5))
+    model.add(Dense(x_train.shape[1] * x_train.shape[2], activation='relu'))
 
-model.summary()
+    model.compile(loss=keras.losses.mean_squared_error,
+                  optimizer=keras.optimizers.Adam(),
+                  metrics=['accuracy'])
 
-if os.path.exists('model/autoencoder.hdf'):
-    print('Model exists, loading...')
-    model.load_weights('model/autoencoder.hdf')
-else:
+    model.summary()
+
+    if os.path.exists('model/autoencoder.hdf'):
+        print('Model exists, loading...')
+        model.load_weights('model/autoencoder.hdf')
+
     history = AccuracyHistory()
+
     model.fit(x_train, flaty_train,
               batch_size=batch_size,
               epochs=epochs,
@@ -59,14 +63,18 @@ else:
     plt.show()
     model.save_weights('model/autoencoder.hdf')
 
-os.makedirs('results/images/', exist_ok=True)
+    os.makedirs('results/images/', exist_ok=True)
 
-plt.set_cmap('gray')
-fig, ax = plt.subplots(1,2)
-for num in range(x_train.shape[0]):
-    ax[0].imshow(np.squeeze(x_train[num:num+1,:,:,:]))
+    plt.set_cmap('gray')
+    fig, ax = plt.subplots(1,2)
+    for num in range(x_train.shape[0]):
+        ax[0].imshow(np.squeeze(x_train[num:num+1,:,:,:]))
 
-    ax[1].imshow(np.reshape(model.predict(x_train[num:num+1,:,:,:]),
-                            (x_train.shape[1], x_train.shape[2])))
+        ax[1].imshow(np.reshape(model.predict(x_train[num:num+1,:,:,:]),
+                                (x_train.shape[1], x_train.shape[2])))
 
-    fig.savefig('results/images/ae_{num}.png'.format(num=num))
+        fig.savefig('results/images/ae_{num}.png'.format(num=num))
+
+
+if __name__ == '__main__':
+    sys.exit(main())
