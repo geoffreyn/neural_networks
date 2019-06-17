@@ -1,23 +1,50 @@
-#!/usr/local/bin python3
+#!/usr/bin/env python3
 
+import datetime
 import os
 import sys
 
 import gzip
 import shutil
-
 from urllib.request import urlopen
 
 
+def size_to_string(bytes_):
+    if (bytes_ > 2**11) and (bytes_ < 2**21):
+        byte_str = "{:0.2f} KB".format(bytes_ / 2**10)
+    elif (bytes_ > 2**21) and (bytes_ < 2**31):
+        byte_str = "{:0.2f} MB".format(bytes_ / 2**20)
+    elif (bytes_ > 2**31) and (bytes_ < 2**41):
+        byte_str = "{:0.2f} GB".format(bytes_ / 2**30)
+    elif bytes_ > 2**41:
+        byte_str = "{:0.2f} TB".format(bytes_ / 2**30)
+    else:
+        byte_str = "{:0.1f} B".format(bytes_)
+
+    return byte_str
+
+
 # Adapted to return file from https://stackoverflow.com/a/2030027
-def chunk_report(bytes_so_far, chunk_size, total_size):
-    percent = float(bytes_so_far) / total_size
-    percent = round(percent*100, 2)
-    sys.stdout.write("Downloaded %d of %d bytes (%0.2f%%)\r" %
-                     (bytes_so_far, total_size, percent))
+def chunk_report(bytes_so_far, chunk_size, total_size, last_chunk_time):
+    this_chunk_time = datetime.datetime.now()
+    percent = bytes_so_far / total_size * 100
+
+    byte_str = size_to_string(bytes_so_far)
+    total_byte_str = size_to_string(total_size)
+
+    time_delta = (this_chunk_time - last_chunk_time).microseconds / 10**6
+    data_rate = max(chunk_size / time_delta, 1)  # Avoid divide-by-zero
+
+    data_rate_str = size_to_string(data_rate)
+
+    sys.stdout.write("Downloaded {} of {}: {:0.2f}% ({}/s)            \r".
+        format(byte_str, total_byte_str, percent, data_rate_str))
 
     if bytes_so_far >= total_size:
         sys.stdout.write('\n')
+
+    last_chunk_time = this_chunk_time
+    return last_chunk_time
 
 
 def chunk_read(response, chunk_size=8192, report_hook=None):
@@ -26,15 +53,18 @@ def chunk_read(response, chunk_size=8192, report_hook=None):
     bytes_so_far = 0
     data = b""
 
+    last_chunk_time = datetime.datetime.now()
     while 1:
         chunk = response.read(chunk_size)
+
         bytes_so_far += len(chunk)
 
         if not chunk:
             break
 
         if report_hook:
-            report_hook(bytes_so_far, chunk_size, total_size)
+            last_chunk_time = report_hook(bytes_so_far, chunk_size,
+                              total_size, last_chunk_time)
 
         data += chunk
 
@@ -80,7 +110,9 @@ def download_files():
 
                 with open(out_path, "wb") as f:
                     response = urlopen(filepath)
-                    data_read = chunk_read(response, report_hook=chunk_report)
+                    data_read = chunk_read(response,
+                                           chunk_size=2**15,
+                                           report_hook=chunk_report)
 
                     f.write(data_read)
     except:
